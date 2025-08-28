@@ -1,7 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
-import 'add_note_page.dart'; // <-- import the new page
+import 'add_note_page.dart';
 
 class NotesPage extends StatelessWidget {
   const NotesPage({super.key});
@@ -18,10 +18,9 @@ class NotesPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Notes'),
+        title: const Text("My Notes"),
         actions: [
           IconButton(
-            tooltip: 'Add Note',
             icon: const Icon(Icons.add),
             onPressed: () {
               Navigator.push(
@@ -31,19 +30,18 @@ class NotesPage extends StatelessWidget {
             },
           ),
           IconButton(
-            tooltip: 'Logout',
+            icon: const Icon(Icons.logout),
             onPressed: () async {
               await _auth.signOut();
               if (context.mounted) {
                 Navigator.pushReplacementNamed(context, '/login');
               }
             },
-            icon: const Icon(Icons.logout),
           ),
         ],
       ),
       body: user == null
-          ? const Center(child: Text('Not logged in'))
+          ? const Center(child: Text("Not logged in"))
           : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
               stream: _notes
                   .where('uid', isEqualTo: user.uid)
@@ -54,15 +52,18 @@ class NotesPage extends StatelessWidget {
                   return const Center(child: CircularProgressIndicator());
                 }
                 if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-                  return const Center(child: Text('No notes yet.'));
+                  return const Center(child: Text("No notes yet"));
                 }
+
                 final docs = snapshot.data!.docs;
+
                 return ListView.builder(
                   itemCount: docs.length,
                   itemBuilder: (context, i) {
                     final note = docs[i].data();
                     return Card(
-                      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      margin:
+                          const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                       child: ListTile(
                         title: Text(note['title'] ?? '(No title)'),
                         subtitle: Text(note['content'] ?? ''),
@@ -79,3 +80,4 @@ class NotesPage extends StatelessWidget {
     );
   }
 }
+

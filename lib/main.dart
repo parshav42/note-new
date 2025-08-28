@@ -4,6 +4,7 @@ import 'firebase_options.dart';
 import 'pages/splash_page.dart';
 import 'pages/login_page.dart';
 import 'pages/notes_page.dart';
+import 'pages/signup_page.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -26,6 +27,7 @@ class NotesApp extends StatelessWidget {
       home: const SplashPage(),
       routes: {
         '/login': (_) => const LoginPage(),
+        '/signup': (_) => const SignupPage(),
         '/notes': (_) => const NotesPage(),
       },
     );

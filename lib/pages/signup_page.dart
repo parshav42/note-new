@@ -28,7 +28,7 @@ class _SignupPageState extends State<SignupPage> {
     try {
       await AuthService().signUp(_email.text.trim(), _password.text.trim());
 
-      // ✅ Navigate instantly after signup
+     
       if (mounted) {
         Navigator.pushReplacementNamed(context, '/notes');
       }
@@ -46,49 +46,86 @@ class _SignupPageState extends State<SignupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign Up')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    controller: _email,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) =>
-                        v != null && v.contains('@') ? null : 'Enter valid email',
-                  ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _password,
-                    obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    validator: (v) =>
-                        v != null && v.length >= 6 ? null : 'Min 6 characters',
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _loading ? null : _signup,
-                    child: _loading
-                        ? const CircularProgressIndicator()
-                        : const Text('Create Account'),
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                    child: const Text('Already have an account? Log in'),
-                  ),
-                ],
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // 👇 Top image
+            Container(
+              width: double.infinity,
+              height: 220,
+              child: Image.asset(
+                'assets/img/signup.png', 
+                fit: BoxFit.contain,
               ),
             ),
-          ),
+            const SizedBox(height: 10),
+            const Text(
+              'Create Account',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 32),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                   
+                    TextFormField(
+                      controller: _email,
+                      decoration: const InputDecoration(
+                        labelText: 'Email',
+                        hintText: 'Enter your email',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) =>
+                          v != null && v.contains('@') ? null : 'Enter valid email',
+                    ),
+                    const SizedBox(height: 20),
+                    // Password field
+                    TextFormField(
+                      controller: _password,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Password',
+                        hintText: 'Enter password',
+                        border: OutlineInputBorder(),
+                      ),
+                      validator: (v) =>
+                          v != null && v.length >= 6 ? null : 'Min 6 characters',
+                    ),
+                    const SizedBox(height: 20),
+                    // Register button
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.deepPurple,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size.fromHeight(50),
+                      ),
+                      onPressed: _loading ? null : _signup,
+                      child: _loading
+                          ? const CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation(Colors.white),
+                            )
+                          : const Text('Sign Up'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () =>
+                  Navigator.pushReplacementNamed(context, '/login'),
+              child: const Text(
+                'Already have an account? Log in',
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
+

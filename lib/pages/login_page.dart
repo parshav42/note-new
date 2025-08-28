@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../util/routes.dart';
 import '../services/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
@@ -9,84 +10,121 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _email = TextEditingController();
-  final _password = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   bool _loading = false;
 
-  @override
-  void dispose() {
-    _email.dispose();
-    _password.dispose();
-    super.dispose();
-  }
-
   Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
 
-    try {
-      await AuthService().signIn(_email.text.trim(), _password.text.trim());
+    final message = await AuthService().signIn(
+      _emailController.text.trim(),
+      _passwordController.text.trim(),
+    );
 
-      // ✅ Navigate instantly after login
+    setState(() => _loading = false);
+
+    if (message == "Success") {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, '/notes');
+        Navigator.pushReplacementNamed(context, MyRoutes.notes);
       }
-    } catch (e) {
+    } else {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text(message ?? "Login failed")),
         );
       }
-    } finally {
-      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Login')),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 400),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Form(
-              key: _formKey,
+      backgroundColor: Colors.white,
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // 👇 Top image
+            Container(
+              width: double.infinity,
+              height: 220,
+              child: Image.asset(
+                'assets/img/login.png',
+                fit: BoxFit.contain,
+              ),
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              'Welcome Back',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 20),
+            Padding(
+              padding:
+                  const EdgeInsets.symmetric(vertical: 16.0, horizontal: 32.0),
               child: Column(
-                mainAxisSize: MainAxisSize.min,
                 children: [
-                  TextFormField(
-                    controller: _email,
-                    decoration: const InputDecoration(labelText: 'Email'),
-                    validator: (v) =>
-                        v != null && v.contains('@') ? null : 'Enter valid email',
+                  TextField(
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
+                    decoration: const InputDecoration(
+                      labelText: "Email",
+                      hintText: "Enter your email",
+                      border: OutlineInputBorder(),
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  TextFormField(
-                    controller: _password,
+                  const SizedBox(height: 20),
+                  TextField(
+                    controller: _passwordController,
                     obscureText: true,
-                    decoration: const InputDecoration(labelText: 'Password'),
-                    validator: (v) =>
-                        v != null && v.length >= 6 ? null : 'Min 6 characters',
+                    decoration: const InputDecoration(
+                      labelText: "Password",
+                      hintText: "Enter your password",
+                      border: OutlineInputBorder(),
+                    ),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      foregroundColor: Colors.white,
+                      minimumSize: const Size.fromHeight(50),
+                    ),
                     onPressed: _loading ? null : _login,
                     child: _loading
-                        ? const CircularProgressIndicator()
-                        : const Text('Login'),
+                        ? const CircularProgressIndicator(
+                            valueColor: AlwaysStoppedAnimation(Colors.white),
+                          )
+                        : const Text("Login"),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, '/signup'),
-                    child: const Text("Don't have an account? Sign up"),
+                    onPressed: () {
+                     Navigator.pushReplacementNamed(context, MyRoutes.signup);
+
+                    },
+                    child: const Text.rich(
+                      TextSpan(
+                        children: [
+                          TextSpan(
+                            text: "New User? ",
+                            style: TextStyle(color: Colors.black),
+                          ),
+                          TextSpan(
+                            text: "Register here",
+                            style: TextStyle(
+                              color: Colors.blue,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
                 ],
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
