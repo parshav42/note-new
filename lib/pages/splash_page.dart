@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'login_page.dart';
-import 'notes_page.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -21,18 +19,14 @@ class _SplashPageState extends State<SplashPage> {
     await Future.delayed(const Duration(seconds: 2)); // splash delay
     final user = FirebaseAuth.instance.currentUser;
 
-    if (mounted) {
-      if (user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const NotesPage()),
-        );
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const LoginPage()),
-        );
-      }
+    if (!mounted) return;
+
+    if (user != null) {
+      // ✅ If user is logged in, go to NotesPage
+      Navigator.pushReplacementNamed(context, '/notes');
+    } else {
+      // ✅ If user is not logged in, go to LoginPage
+      Navigator.pushReplacementNamed(context, '/login');
     }
   }
 

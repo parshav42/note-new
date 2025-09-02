@@ -1,5 +1,9 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../services/auth_service.dart';
 
 class AddNotePage extends StatefulWidget {
@@ -10,28 +14,50 @@ class AddNotePage extends StatefulWidget {
 }
 
 class _AddNotePageState extends State<AddNotePage> {
-  final _titleController = TextEditingController();
-  final _contentController = TextEditingController();
+  final _title = TextEditingController();
+  final _content = TextEditingController();
   final _notes = FirebaseFirestore.instance.collection('notes');
   final _auth = AuthService();
 
-  Future<void> _saveNote() async {
+  File? _image;
+
+  Future<void> _pick(ImageSource source) async {
+    if (source == ImageSource.camera) {
+      if (!await Permission.camera.request().isGranted) return;
+    } else {
+      if (!await Permission.photos.request().isGranted) return;
+    }
+    final picked = await ImagePicker().pickImage(source: source);
+    if (picked != null) setState(() => _image = File(picked.path));
+  }
+
+  Future<String?> _upload(String id) async {
+    if (_image == null) return null;
+    final ref = FirebaseStorage.instance.ref("note_images/$id.jpg");
+    await ref.putFile(_image!);
+    return ref.getDownloadURL();
+  }
+
+  Future<void> _save() async {
     final user = _auth.currentUser;
     if (user == null) return;
 
-    final title = _titleController.text.trim();
-    final content = _contentController.text.trim();
+    final t = _title.text.trim();
+    final c = _content.text.trim();
+    if (t.isEmpty && c.isEmpty && _image == null) return;
 
-    if (title.isEmpty && content.isEmpty) return;
+    final id = _notes.doc().id;
+    final url = await _upload(id);
 
-    await _notes.add({
+    await _notes.doc(id).set({
       'uid': user.uid,
-      'title': title,
-      'content': content,
+      'title': t,
+      'content': c,
+      'imageUrl': url,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    if (mounted) Navigator.pop(context);
+    Navigator.pop(context);
   }
 
   @override
@@ -40,34 +66,44 @@ class _AddNotePageState extends State<AddNotePage> {
       appBar: AppBar(
         title: const Text("Add Note"),
         actions: [
-          IconButton(
-            onPressed: _saveNote,
-            icon: const Icon(Icons.check),
-          ),
+          IconButton(onPressed: _save, icon: const Icon(Icons.check)),
         ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16), // ✅ FIXED (was `cons`)
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                hintText: "Title",
-                border: OutlineInputBorder(),
-              ),
+              controller: _title,
+              decoration: const InputDecoration(hintText: "Title"),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Expanded(
               child: TextField(
-                controller: _contentController,
+                controller: _content,
                 maxLines: null,
                 expands: true,
-                decoration: const InputDecoration(
-                  hintText: "Write your note...",
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(hintText: "Write your note"),
               ),
+            ),
+            if (_image != null) ...[
+              const SizedBox(height: 8),
+              Image.file(_image!, height: 200),
+            ],
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.photo, size: 28),
+                  onPressed: () => _pick(ImageSource.gallery),
+                ),
+                const SizedBox(width: 12),
+                IconButton(
+                  icon: const Icon(Icons.camera_alt, size: 28),
+                  onPressed: () => _pick(ImageSource.camera),
+                ),
+              ],
             ),
           ],
         ),

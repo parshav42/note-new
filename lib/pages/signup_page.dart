@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -22,26 +24,30 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Future<void> _signup() async {
-    if (!_formKey.currentState!.validate()) return;
-    setState(() => _loading = true);
-
-    try {
-      await AuthService().signUp(_email.text.trim(), _password.text.trim());
-
-     
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/notes');
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _loading = false);
+  setState(() => _loading = true);
+  try {
+    await AuthService().signUp(
+      _email.text.trim(),
+      _password.text.trim(),
+    );
+    if (mounted) Navigator.pushReplacementNamed(context, '/notes');
+  } on FirebaseAuthException catch (e) {
+    String message = "Signup failed";
+    if (e.code == 'weak-password') {
+      message = "Password should be at least 6 characters";
+    } else if (e.code == 'invalid-email') {
+      message = "Invalid email address";
+    } else if (e.code == 'email-already-in-use') {
+      message = "This email is already registered";
     }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  } finally {
+    if (mounted) setState(() => _loading = false);
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +57,7 @@ class _SignupPageState extends State<SignupPage> {
         child: Column(
           children: [
             // 👇 Top image
-            Container(
+            SizedBox(
               width: double.infinity,
               height: 220,
               child: Image.asset(

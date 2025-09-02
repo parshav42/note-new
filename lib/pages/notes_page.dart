@@ -8,12 +8,12 @@ class NotesPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final _auth = AuthService();
-    final _notes = FirebaseFirestore.instance.collection('notes');
-    final user = _auth.currentUser;
+    final auth = AuthService();
+    final notes = FirebaseFirestore.instance.collection('notes');
+    final user = auth.currentUser;
 
-    Future<void> _deleteNote(String id) async {
-      await _notes.doc(id).delete();
+    Future<void> deleteNote(String id) async {
+      await notes.doc(id).delete();
     }
 
     return Scaffold(
@@ -32,7 +32,7 @@ class NotesPage extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: () async {
-              await _auth.signOut();
+              await auth.signOut();
               if (context.mounted) {
                 Navigator.pushReplacementNamed(context, '/login');
               }
@@ -43,7 +43,7 @@ class NotesPage extends StatelessWidget {
       body: user == null
           ? const Center(child: Text("Not logged in"))
           : StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-              stream: _notes
+              stream: notes
                   .where('uid', isEqualTo: user.uid)
                   .orderBy('createdAt', descending: true)
                   .snapshots(),
@@ -69,7 +69,7 @@ class NotesPage extends StatelessWidget {
                         subtitle: Text(note['content'] ?? ''),
                         trailing: IconButton(
                           icon: const Icon(Icons.delete, color: Colors.red),
-                          onPressed: () => _deleteNote(docs[i].id),
+                          onPressed: () => deleteNote(docs[i].id),
                         ),
                       ),
                     );

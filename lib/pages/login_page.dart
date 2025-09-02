@@ -45,7 +45,7 @@ class _LoginPageState extends State<LoginPage> {
         child: Column(
           children: [
             // 👇 Top image
-            Container(
+            SizedBox(
               width: double.infinity,
               height: 220,
               child: Image.asset(
